@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Title -->
+        <title>TelAPI Classroom</title>
+        <!-- Meta tags -->
+        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+        <!-- CSS -->
+        <link rel="stylesheet" type="text/css" media="screen" href="/static/css/light-blue.css" />
+        <link rel="stylesheet" type="text/css" media="screen" href="/static/css/prettyPhoto.css" />
+        <style type="text/css">
+            .live_editor_admin {
+                border : 1px solid #DDD;
+                border-left : 5px solid #579dcf;
+                background-color : #F6F6F6;
+                float : left;
+                width : 95%;
+                margin : 10px;
+                padding : 10px;
+            }
+
+            .live_editor_admin h3 {
+                font-size : 18px;
+                margin-bottom : 10px;
+            }
+
+            pre {
+                background-image : url('/static/images/code-loader.gif?123');
+                background-position : -1000px -1000px;
+                background-repeat : no-repeat;
+                background-color : #000;
+                color : #FFF;
+                font-size : 14px;
+                min-height : 100px;
+                overflow : auto;
+                line-height : 125%;
+                padding : 10px;
+                text-shadow : none;
+            }
+            
+            pre.loading {
+                background-position : 50% 50%;
+            }
+            
+            #live_editor {
+                height : 300px;
+                width : 100%;
+            }
+        </style>
+        <!-- JavaScript -->
+        <script src="/static/js/forms.js" type="text/javascript"></script>
+        <script src="/static/js/jquery-1.6.1.min.js" type="text/javascript"></script>
+        <script src="/static/js/jquery.scrollTo-min.js" type="text/javascript"></script>
+        <script type="text/javascript" src="http://www.cdolivet.com/editarea/editarea/edit_area/edit_area_full.js"></script>
+        <script type="text/javascript" src="http://{{ NODE_SERVER.host }}:{{ NODE_SERVER.port }}/socket.io/socket.io.js"></script>
+        <script type="text/javascript">
+            var socket = io.connect('http://{{ NODE_SERVER.host }}:{{ NODE_SERVER.port }}');
+            
+            document.documentElement.className += 'js-ready';
+            
+            $(function() {
+                $('[href="#join-session"]').click(function() {
+                    var join_code = prompt("What is your Join Code?");
+                    
+                    if(join_code == null)
+                        return false;
+                    
+                    window.location.assign("/v" + join_code);
+                    
+                    return false;
+                });
+                
+                $('[href="#create-session"]').click(function() {
+                    var name = prompt("What shall we name your session?", "Unnamed Session");
+                    
+                    if(name == null)
+                        return false;
+                    
+                    $.post('/create/classroom', {
+                        name    : name
+                    }, function(response) {
+                        if(response.error)
+                            return alert(response.error);
+                            
+                        window.location.assign('/classroom/' + response.classroom_id + '/teacher');
+                    }, 'json');
+                    
+                    return false;
+                });
+            });
+        </script>
+        <script src="/static/js/royal.js" type="text/javascript"></script>
+        <!-- IE scripts and stylesheets -->
+        <!--[if lt IE 9]>
+            <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+            <script src="/static/js/iefixes.js" type="text/javascript"></script>
+        <![endif]-->
+        {% block javascript %}{% endblock %}
+    </head>
+    <body class="home">
+        <div id="wrap">
+            <header id="header">
+                <div class="inner-wrap clearfix">
+                    <h1 id="logo">
+                        <a href="/">TelAPI Classroom</a>
+                    </h1>
+                    <nav class="dropdown">
+                        <ul id="nav" class="clearfix">
+                            <li>
+                                <a href="/">Home</a>
+                            </li>
+                            <li>
+                                <a href="#join-session">Join Session</a>
+                            </li>
+                            <li>
+                                <a href="#create-session">Create Session</a>
+                            </li>
+                            <!--
+                            <li>
+                                <a href="#">Features</a>
+                                <ul>
+                                    <li><a href="4-column-pricing.html">Pricing&nbsp;tables</a>
+                                        <ul>
+                                            <li><a href="3-column-pricing.html">Three&nbsp;columns</a></li>
+                                            <li><a href="4-column-pricing.html">Four&nbsp;columns</a></li>
+                                            <li><a href="5-column-pricing.html">Five&nbsp;columns</a></li>
+                                        </ul>
+                                    </li>
+                                    <li><a href="wiki.html">Knowledgebase</a>
+                                        <ul>
+                                            <li><a href="wiki-single.html">Single&nbsp;article</a></li>
+                                            <li><a href="wiki.html">Archive</a></li>
+                                        </ul>
+                                    </li>
+                                    <li><a href="register.html">Registration&nbsp;Form</a></li>
+                                    <li><a href="elements.html">Styling&nbsp;demos</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="wiki.html">Knowledgebase</a>
+                                <ul>
+                                    <li><a href="wiki-single.html">Single&nbsp;article</a></li>
+                                    <li><a href="documentation/index.html">Documentation</a></li>
+                                    <li><a href="contact.html">Contact&nbsp;support</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="4-column-pricing.html">Pricing</a>
+                                <ul>
+                                    <li><a href="3-column-pricing.html">Three&nbsp;columns</a></li>
+                                    <li><a href="4-column-pricing.html">Four&nbsp;columns</a></li>
+                                    <li><a href="5-column-pricing.html">Five&nbsp;columns</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="blog.html">Blog</a>
+                                <ul>
+                                    <li><a href="blog-single.html">Single&nbsp;post</a></li>
+                                    <li><a href="blog.html">Monthly&nbsp;archives</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="contact.html">Contact</a></li>
+                            -->
+                        </ul><!-- end #nav -->
+                    </nav>
+                    <div class="login">
+                        {% if classroom %}
+                        <div class="user-info">
+                            <p>Currently in <span class="username">{{ classroom.name }}</span></p>
+                        </div>
+                        {% else %}
+                        <!--
+                        <ul class="login-links">
+                            <li><a href="register.html">Register</a></li>
+                            <li><a class="login-link" href="#">Login</a></li>
+                        </ul>
+                            -->
+                        {% endif %}
+                        <form id="login-form" method="post" action="#">
+                            <p>
+                                <label for="username">Username</label>
+                                <input name="username" value="" id="username" type="text" required placeholder="Username" />
+                            </p>
+                            <p>
+                                <label for="password">Password</label>
+                                <input name="password" value="" id="password" type="password" required placeholder="Password" />
+                            </p>
+                            <p class="forgot"><a href="#">Forgot?</a></p>
+                            <p>
+                                <input class="login-submit" type="submit" value="Login" name="submit" />
+                            </p>
+                        </form>
+                    </div>
+                </div>
+            </header>
+            {% block featured %}{% endblock %}
+            {% block action %}{% endblock %}
+            <div id="main">
+                <div class="inner-wrap">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+        <footer id="footer">
+            <div class="inner-wrap">
+                <nav>
+                    <ul id="footer-nav" class="clearfix">
+                        <li><a href="https://www.telapi.com">TelAPI Home</a></li>
+                        <li><a href="https://www.telapi.com/signup">Sign up</a></li>
+                        <li><a href="http://www.telapi.com/legal/terms-of-service">Legal</a></li>
+                        <li><a href="http://www.telapi.com/help">Support</a></li>
+                        <li><a href="http://www.telapi.com/contact">Contact</a></li>
+                    </ul>
+                </nav>
+                <!-- Set margin-top on logo to negative half of image height (to center it vertically) in CSS (.footer-logo) -->
+                <a href="index.html"><img class="footer-logo" src="http://www.telapi.com/release/img/footer-logo.png" width="138" height="39" alt="logo" /></a>
+                <small class="copyright">&copy;2012&nbsp;&nbsp;&middot;&nbsp;&nbsp;TelAPI Classroom is powered by <a href="http://www.telapi.com/">TelAPI.com</a></small>
+            </div>
+        </footer>
+    </body>
+</html>

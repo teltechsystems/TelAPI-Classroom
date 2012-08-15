@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+
+{% block javascript %}
+<script type="text/javascript" src="/static/js/skulpt/dist/skulpt.js"></script>
+<script type="text/javascript">
+    var handle_update = function(editor_id) {
+        console.log(editAreaLoader.getValue(editor_id));
+    }
+    
+    // Gets set to true when a teacher joins the classroom
+    var force_autosave = false;
+
+    socket.emit('user-update', {
+        classroom_role  : 'student',
+        user_token      : '{{ user_token.token }}'
+    });
+    
+    socket.on('user-connect', function(user_socket) {
+        if(user_socket.classroom_role == "teacher")
+            force_autosave = true;
+    });
+
+    socket.on('user-update', function(user_socket) {
+        if(socket.socket.sessionid != user_socket.socket_id)
+            return;
+
+        $('[table="users"][column="name"]').text(user_socket.name);
+    });
+
+    socket.on('user-request-name', function(user_socket) {
+        var name = prompt("Hi, what's your name?");
+
+        socket.emit('user-update', {
+            classroom_role  : 'student',
+            name            : name,
+            user_token      : '{{ user_token.token }}'
+        });
+    });
+
+    socket.on('code-restore', function(data) {
+        editAreaLoader.setValue('live_editor', data.code);
+    });
+
+    $(function() {
+        editAreaLoader.init({
+            id: "live_editor",
+            start_highlight: true,
+            allow_resize: "both",
+            allow_toggle: true,
+            word_wrap: true,
+            language: "en",
+            syntax: "python",
+            change_callback: "handle_update"
+        });
+
+        var previous_value = "", current_value = "";
+
+        setInterval(function() {
+            current_value = editAreaLoader.getValue("live_editor");
+
+            if(!force_autosave && current_value == previous_value)
+                return;
+
+            socket.emit('code-autosave', {
+                user_token  : '{{ user_token.token }}',
+                value       : current_value
+            });
+
+            previous_value = current_value;
+            
+            force_autosave = false;
+        }, 500);
+
+        $('#execute-code').click(function() {
+            $.scrollTo('#output', 500);
+            
+            $('#output').addClass('loading').text('').load('/classroom/{{ user_token.classroom_id }}/execute', {}, function(response) {
+                $(this).removeClass('loading');
+            });
+        });
+        
+        $('#ask-question').click(function() {
+            var question = prompt("Hey there, what's your question?");
+            
+            if(question == null)
+                return false;
+            
+            socket.emit('question-asked', {
+                user_token  : '{{ user_token.token }}',
+                question    : question
+            });
+        });
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<style type="text/css">
+    #EditAreaArroundInfos_live_editor input {
+        display : inline;
+    }
+</style>
+<div class="content content-full">
+    <div class="column-container">
+        <h2>Welcome to "{{ classroom.name }}"</h2>
+        <h4>Ready to become a bro-grammer <span table="users" column="name"></span>?</h4>
+        <p>
+            Thanks for joining our class! We've created a live editor instance below, that submits live updates
+            to your teacher for debugging purposes! Feel free to give it a spin, and we really hope you'll enjoy this 
+            class!
+        </p>
+        <br style="clear : both;" />
+        <div style="float : left; width : 600px; margin-right : 30px;">
+            <textarea id="live_editor"></textarea>
+        </div>
+        <div style="float : left; width : 370px;">
+            <!-- <div style="float : right; margin-bottom : 10px;"> -->
+            <div style="text-align : right; margin-bottom : 10px;">
+                <a id="ask-question" class="button button-mail">Ask a Question<span class="icon"></span></a>
+                <a id="execute-code" class="button button-arrow">Execute Code<span class="icon"></span></a>
+            </div>
+            <pre id="output" style="height : 180px;">Try clicking "Execute Code" :)</pre>
+            <p>
+                When you're ready and willing to execute your code remotely, you can use the 
+                remote url we've dynamically created just for you below!
+            </p>    
+            <div style="background-color : #FFF; border-radius : 10px; padding : 5px; text-align : center;">
+                <a style="font-weight : bold;" href="{{ execution_link }}" target="_blank">{{ execution_link }}</a>
+            </div>
+        </div>
+        <br style="clear : both;" />
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+<?xml version="1.0" charset="UTF-8"?>
+<Response>
+    <Say>Hello! You are so nice for calling me!</Say>
+    <Say>However, I do regret to say I will be hanging up now.</Say>
+    <Hangup />
+</Response>

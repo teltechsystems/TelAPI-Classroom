@@ -1,0 +1,108 @@
+{% extends "layout.html" %}
+{% block javascript %}
+<script type="text/javascript">
+    var user_sockets = {};
+
+    var display_user = function(user_socket) {
+        if(user_socket.classroom_role == 'student') {
+            if(!$('.live_editor_admin[socket_id="' + user_socket.socket_id + '"]').size())
+                $('#students').append('<div class="live_editor_admin" socket_id="' + user_socket.socket_id + '"><h3>' + user_socket.name + '</h3><pre></pre></div>');
+
+            $('#no-students').hide();
+        } else {
+            hide_user(user_socket);
+        }
+    }
+
+    var hide_user = function(user_socket) {
+        $('.live_editor_admin[socket_id="' + user_socket.socket_id + '"]').fadeOut('fast', function() {
+            $(this).remove();
+
+            $('#no-students')[$('#students .live_editor_admin:visible').size() ? 'hide' : 'show']();
+        });
+    }
+
+    socket.emit('user-update', {
+        classroom_role  : 'teacher',
+        user_token      : '{{ user_token.token }}'
+    });
+
+    socket.on('user-connect', function(user_socket) {
+        user_sockets[user_socket.socket_id] = user_socket;
+
+        display_user(user_socket);
+    });
+
+    socket.on('user-update', function(user_socket) {
+        user_sockets[user_socket.socket_id] = user_socket;
+
+        display_user(user_socket);
+        
+        $('[socket_id="' + user_socket.socket_id + '"] h3').text(user_socket.name);
+    });
+
+    socket.on('question-asked', function(data) {
+        var $question = $('.question:first').clone();
+        
+        $question
+            .find('.close').remove().end()
+            .find('.user_name').text(data.user_name + ' wants to know...').end()
+            .find('.question').text(data.question + '?').end()
+            .prependTo('#questions').show().royalClose();
+    });
+
+    socket.on('user-disconnect', function(user_socket) {
+        delete user_sockets[user_socket.socket_id];
+
+        hide_user(user_socket);
+    });
+
+    socket.on('code-update', function(data) {
+        var lines = data.value.split("\n");
+
+        for(var i = 0; i < lines.length; i++)
+            lines[i] = (i + 1) + ': ' + lines[i];
+
+        $('.live_editor_admin[socket_id="' + data.socket_id + '"] pre').text(lines.join("\n"));
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="question box box-info" style="display : none;">
+    <div class="box-content">
+        <h3>
+            <small class="user_name"></small>
+            <span class="question"></span>
+        </h3>
+    </div>
+</div>
+<div class="content content-full">
+    <div class="column-container" id="students">
+        <div id="questions"></div>
+        <h3>Your Students in "{{ classroom.name }}"</h3>
+        <h5>Join code is: {{ classroom.join_code }}</h5>
+        <p>
+            We're very excited that you're using LiveCoder to teach students how to program! As your
+            students join the classroom, their names will appear below. Each student has their own programming
+            box, and you will see what they're typing, as they're typing it!
+        </p>
+        <div class="question box box-resource">
+            <div class="box-content">
+                <h3>
+                    <small>How a student can access your class...</small>
+                    <a href="{{ public_link }}" target="_blank">{{ public_link }}</a>
+                </h3>
+            </div>
+        </div>
+        <div id="no-students" class="box box-info">
+            <div class="box-content">
+                <h3>
+                    <small>Please wait while students connect...</small>
+                    Your classroom is currently empty
+                </h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
