@@ -144,4 +144,5 @@ def classroom_teacher(classroom_id):
 
 app.secret_key = settings.SECRET_KEY
 
-app.run(**settings.CLIENT_SERVER)
+if __name__ == "__main__":
+    app.run(**settings.CLIENT_SERVER)

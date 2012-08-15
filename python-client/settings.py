@@ -22,3 +22,8 @@ DATABASE = {
 }
 
 SECRET_KEY = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
+
+try:
+    from settings_local import *
+except ImportError:
+    pass
