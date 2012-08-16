@@ -61,6 +61,7 @@ def execute():
     statement_module = new.module('__main__')
     
     statement_module.__builtins__ = __builtin__
+    statement_module.request = request
         
     program = request.form['code']
     
